@@ -1,4 +1,5 @@
 import streamlit as st
+import datetime
 from pawpal_system import Owner, Pet, Task, Scheduler
 
 
@@ -119,6 +120,16 @@ with col3:
 with col4:
     priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
 
+col5, col6 = st.columns(2)
+with col5:
+    task_date = st.date_input(
+        "Task date", value=datetime.date.today(), key="task_date_input"
+    )
+with col6:
+    task_time = st.time_input(
+        "Task time", value=datetime.time(9, 0), key="task_time_input"
+    )
+
 
 # Only allow adding a task if an owner and pet are selected
 
@@ -129,9 +140,12 @@ if st.button("Add task"):
             description=task_description,
             duration=duration,
             priority=priority,
+            scheduled_time=task_time,
         )
         selected_pet.add_task(new_task)
-        st.success(f"Task '{task_title}' added to pet '{selected_pet.name}'.")
+        st.success(
+            f"Task '{task_title}' added to pet '{selected_pet.name}' at {task_time.strftime('%H:%M')} on {task_date}."
+        )
     else:
         st.warning("Please select a pet to add the task.")
 
@@ -145,6 +159,11 @@ if selected_pet and selected_pet.tasks:
             {
                 "Task": t.name,
                 "Description": t.description,
+                "Time": (
+                    t.scheduled_time.strftime("%H:%M")
+                    if t.scheduled_time
+                    else "Unscheduled"
+                ),
                 "Duration (minutes)": getattr(t, "duration", ""),
                 "Priority": getattr(t, "priority", ""),
             }
@@ -162,17 +181,48 @@ st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
 
 if st.button("Generate schedule"):
-    st.warning(
-        "Not implemented yet. Next step: create your scheduling logic (classes/functions) and call it here."
-    )
-    st.markdown(
-        """
-Suggested approach:
-1. Design your UML (draft).
-2. Create class stubs (no logic).
-3. Implement scheduling behavior.
-4. Connect your scheduler here and display results.
-"""
-    )
+    if not selected_owner:
+        st.warning("Please select an owner to generate a schedule.")
+    elif not selected_owner.pets or sum(len(p.tasks) for p in selected_owner.pets) == 0:
+        st.warning("Please add at least one pet with tasks to generate a schedule.")
+    else:
+        # Create scheduler and manage tasks
+        scheduler = Scheduler(owner=selected_owner, date=datetime.date.today())
+        scheduler.manage_tasks()
+
+        # Display summary
+        st.success(scheduler.explanation)
+
+        # Display warnings if any
+        if scheduler.warnings:
+            st.warning("⚠️ **Scheduling Conflicts Detected**")
+            for warning in scheduler.warnings:
+                st.write(f"- {warning}")
+
+        # Display the scheduled tasks
+        st.subheader("📅 Daily Schedule")
+        if scheduler.scheduled_tasks:
+            schedule_data = []
+            for task in scheduler.scheduled_tasks:
+                pet_name = task.pet.name if task.pet else "Unknown"
+                time_str = (
+                    task.scheduled_time.strftime("%H:%M")
+                    if task.scheduled_time
+                    else "Unscheduled"
+                )
+                status = "✓ Done" if task.completed else "⏳ Pending"
+                schedule_data.append(
+                    {
+                        "Time": time_str,
+                        "Task": task.name,
+                        "Pet": pet_name,
+                        "Duration": f"{task.duration} min",
+                        "Priority": task.priority.capitalize(),
+                        "Status": status,
+                    }
+                )
+            st.table(schedule_data)
+        else:
+            st.info("No tasks to schedule.")
 
 ## The above logic for adding pets and tasks is now handled in the correct UI locations.

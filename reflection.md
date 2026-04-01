@@ -46,6 +46,9 @@ My scheduler does not yet determine if event durations overlap, only checking fo
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
+I used AI to brainstorm and debug the algorithms in this project. It was helpful to prompt the AI about specific function and lines when something didn't go the way I expected.
+
+
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
