@@ -14,11 +14,11 @@ owner.add_pet(pet2)
 
 # Add at least three Tasks with different times to those pets
 task1 = Task(
-    name="Walk", description="Take Mocha for a walk", scheduled_time=datetime.time(9, 0)
+    name="Walk", description="Take Mocha for a walk", duration=20, priority="medium", scheduled_time=datetime.time(9, 0)
 )
-task2 = Task(name="Feed", description="Feed Maple", scheduled_time=datetime.time(12, 0))
+task2 = Task(name="Feed", description="Feed Maple", duration=10, priority="low", scheduled_time=datetime.time(12, 0))
 task3 = Task(
-    name="Groom", description="Groom Mocha", scheduled_time=datetime.time(18, 0)
+    name="Groom", description="Groom Mocha", duration=30, priority="high", scheduled_time=datetime.time(18, 0)
 )
 
 # Assign tasks to pets

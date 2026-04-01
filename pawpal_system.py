@@ -7,6 +7,8 @@ import datetime
 class Task:
     name: str
     description: str
+    duration: int  # in minutes
+    priority: str  # e.g., 'low', 'medium', 'high'
     scheduled_time: Optional[datetime.time] = None
     frequency: Optional[str] = None  # e.g., 'daily', 'weekly'
     completed: bool = False
@@ -89,3 +91,6 @@ class Scheduler:
             print(f"- {time_str}: {task.description} (Pet: {pet_name}) [{status}]")
         if self.explanation:
             print(self.explanation)
+
+    def clear_schedule(self):
+        self.scheduled_tasks.clear()
