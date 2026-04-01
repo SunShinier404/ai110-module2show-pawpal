@@ -46,3 +46,7 @@ pip install -r requirements.txt
 1. Conflict detection for same start-time tasks with warning system to alert user
 2. Automatic conflict checks during scheduling
 3. Automatically reschedule daily and weekly reoccuring tasks
+
+### Testing PawPal+
+`python -m pytest tests/test_pawpal.py -v`
+My test cases check for conflict handling for 3+ tasks with the same time, tasks with no times, conflict tasks across different pets, etc. Recurring tasks are also tested to ensure they are rescheduled for valid times and only when they are marked completed. They also check that task sorting order is correct.
