@@ -28,10 +28,14 @@ I also changed the Plan class to be Scheduler instead which will keep track of a
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+My scheduler considers time and priority. I chose to focus on time since it is more constraining in terms of scheduling. With priority, tasks can simply be ordered my urgency but with time, there must be some more logic implemented to prevent conflicts.
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+My scheduler does not yet determine if event durations overlap, only checking for exact start time conflicts. I think this is reasonable for now since same start times is a guranteed scheduling conflict while overlapping durations have potential for ambiguity.
 
 ---
 
