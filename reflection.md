@@ -17,6 +17,7 @@ Plan includes a schedule of Tasks and provides an explanation. These should allo
 - If yes, describe at least one change and why you made it.
 
 Yes, my design changed. The original UML did not include clear references between pets, owners, and tasks which could be confusing if there were multiple of the same task. I added variables to keep track of which belongs to what/who.
+I also changed the Plan class to be Scheduler instead which will keep track of and assign tasks.
 
 ---
 

@@ -6,12 +6,17 @@ import datetime
 @dataclass
 class Task:
     name: str
-    duration: int  # in minutes
-    priority: int  # 1 = highest
-    description: Optional[str] = None
+    description: str
     scheduled_time: Optional[datetime.time] = None
-    pet: Optional["Pet"] = None  # Reference to the pet this task is for
-    owner: Optional["Owner"] = None  # Reference to the owner responsible for this task
+    frequency: Optional[str] = None  # e.g., 'daily', 'weekly'
+    completed: bool = False
+    pet: Optional["Pet"] = None
+
+    def mark_complete(self):
+        self.completed = True
+
+    def mark_incomplete(self):
+        self.completed = False
 
 
 @dataclass
@@ -19,8 +24,14 @@ class Pet:
     name: str
     species: str
     age: int
-    owners: List["Owner"] = field(default_factory=list)  # Reference to the owner
     tasks: List[Task] = field(default_factory=list)
+
+    def add_task(self, task: Task):
+        task.pet = self
+        self.tasks.append(task)
+
+    def get_tasks(self) -> List[Task]:
+        return self.tasks
 
 
 @dataclass
@@ -29,14 +40,16 @@ class Owner:
     pets: List[Pet] = field(default_factory=list)
     preferences: Optional[dict] = field(default_factory=dict)
 
-    def add_pet(self, pet: "Pet"):
-        pet.owners.append(self)
+    def add_pet(self, pet: Pet):
         self.pets.append(pet)
 
+    def get_all_tasks(self) -> List[Task]:
+        tasks = []
+        for pet in self.pets:
+            tasks.extend(pet.get_tasks())
+        return tasks
 
-@dataclass
 
-# Scheduler class to generate daily plans for an owner and their pets
 @dataclass
 class Scheduler:
     owner: Owner
@@ -44,14 +57,35 @@ class Scheduler:
     scheduled_tasks: List[Task] = field(default_factory=list)
     explanation: Optional[str] = None
 
-    def generate_schedule(self):
-        # Placeholder for scheduling logic
-        self.scheduled_tasks = []
-        for pet in self.owner.pets:
-            for task in pet.tasks:
-                self.scheduled_tasks.append(task)
+    def retrieve_tasks(self) -> List[Task]:
+        return self.owner.get_all_tasks()
+
+    def organize_tasks(self):
+        # Example: sort by scheduled_time, then by pet name
+        tasks = self.retrieve_tasks()
+        self.scheduled_tasks = sorted(
+            tasks,
+            key=lambda t: (
+                t.scheduled_time or datetime.time(0, 0),
+                t.pet.name if t.pet else "",
+            ),
+        )
+
+    def manage_tasks(self):
+        # Placeholder for more advanced management logic
+        self.organize_tasks()
         self.generate_explanation()
 
     def generate_explanation(self):
-        # Placeholder for explanation logic
-        self.explanation = "Schedule generated based on priorities, owner preferences, and constraints."
+        self.explanation = f"Scheduled {len(self.scheduled_tasks)} tasks for {self.owner.name} on {self.date}."
+
+    def print_schedule(self):
+        self.manage_tasks()
+        print(f"Today's Schedule for {self.owner.name} on {self.date}:")
+        for task in self.scheduled_tasks:
+            time_str = task.scheduled_time.strftime("%H:%M") if task.scheduled_time else "No time set"
+            pet_name = task.pet.name if task.pet else "No pet"
+            status = "Completed" if task.completed else "Pending"
+            print(f"- {time_str}: {task.description} (Pet: {pet_name}) [{status}]")
+        if self.explanation:
+            print(self.explanation)
