@@ -3,6 +3,16 @@ import datetime
 from pawpal_system import Owner, Pet, Task, Scheduler
 
 
+def get_conflict_groups(tasks):
+    """Group scheduled tasks by time and return only groups with conflicts."""
+    grouped = {}
+    for task in tasks:
+        if task.scheduled_time is None:
+            continue
+        grouped.setdefault(task.scheduled_time, []).append(task)
+    return {time: grouped[time] for time in grouped if len(grouped[time]) > 1}
+
+
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
 st.title("🐾 PawPal+")
@@ -180,7 +190,13 @@ st.divider()
 st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
 
+if "show_schedule" not in st.session_state:
+    st.session_state.show_schedule = False
+
 if st.button("Generate schedule"):
+    st.session_state.show_schedule = True
+
+if st.session_state.show_schedule:
     if not selected_owner:
         st.warning("Please select an owner to generate a schedule.")
     elif not selected_owner.pets or sum(len(p.tasks) for p in selected_owner.pets) == 0:
@@ -198,6 +214,92 @@ if st.button("Generate schedule"):
             st.warning("⚠️ **Scheduling Conflicts Detected**")
             for warning in scheduler.warnings:
                 st.write(f"- {warning}")
+
+            st.markdown("### Resolve Conflicts")
+            st.caption(
+                "Edit or remove conflicting tasks below. After saving/removing, the page will refresh with an updated schedule."
+            )
+
+            conflict_groups = get_conflict_groups(scheduler.scheduled_tasks)
+            priority_options = ["low", "medium", "high"]
+
+            for conflict_time in sorted(conflict_groups):
+                conflict_tasks = conflict_groups[conflict_time]
+                time_label = conflict_time.strftime("%H:%M")
+                with st.expander(
+                    f"Conflict at {time_label} ({len(conflict_tasks)} tasks)",
+                    expanded=True,
+                ):
+                    for task in conflict_tasks:
+                        pet_name = task.pet.name if task.pet else "Unknown"
+                        st.markdown(f"**{task.name} ({pet_name})**")
+
+                        current_priority = (
+                            task.priority
+                            if task.priority in priority_options
+                            else "low"
+                        )
+
+                        with st.form(key=f"conflict_form_{id(task)}"):
+                            edited_name = st.text_input(
+                                "Task title",
+                                value=task.name,
+                                key=f"edit_name_{id(task)}",
+                            )
+                            edited_description = st.text_input(
+                                "Task description",
+                                value=task.description,
+                                key=f"edit_description_{id(task)}",
+                            )
+
+                            col_a, col_b, col_c = st.columns(3)
+                            with col_a:
+                                edited_duration = st.number_input(
+                                    "Duration (minutes)",
+                                    min_value=1,
+                                    max_value=240,
+                                    value=int(task.duration),
+                                    key=f"edit_duration_{id(task)}",
+                                )
+                            with col_b:
+                                edited_priority = st.selectbox(
+                                    "Priority",
+                                    priority_options,
+                                    index=priority_options.index(current_priority),
+                                    key=f"edit_priority_{id(task)}",
+                                )
+                            with col_c:
+                                edited_time = st.time_input(
+                                    "Task time",
+                                    value=task.scheduled_time,
+                                    key=f"edit_time_{id(task)}",
+                                )
+
+                            save_clicked = st.form_submit_button("Save edits")
+                            remove_clicked = st.form_submit_button("Remove task")
+
+                        if save_clicked:
+                            task.name = edited_name.strip() or task.name
+                            task.description = edited_description.strip()
+                            task.duration = int(edited_duration)
+                            task.priority = edited_priority
+                            task.scheduled_time = edited_time
+                            st.success(
+                                f"Updated '{task.name}' for {pet_name}. Rebuilding schedule..."
+                            )
+                            st.rerun()
+
+                        if remove_clicked:
+                            if task.pet and task in task.pet.tasks:
+                                task.pet.tasks.remove(task)
+                                st.success(
+                                    f"Removed '{task.name}' for {pet_name}. Rebuilding schedule..."
+                                )
+                                st.rerun()
+                            else:
+                                st.error(
+                                    "Could not remove task: task no longer exists."
+                                )
 
         # Display the scheduled tasks
         st.subheader("📅 Daily Schedule")
