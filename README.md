@@ -101,3 +101,7 @@ My test cases check for conflict handling for 3+ tasks with the same time, tasks
 ### Demo
 
 <a href="/course_images/ai110/demo.png" target="_blank"><img src='/course_images/ai110/demo.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
+
+### Testing PawPal+
+> python -m pytest
+My tests ensure the basic functionality works, checks recurrence and rescheduling logic, sorting correctness, and conflict detection.
